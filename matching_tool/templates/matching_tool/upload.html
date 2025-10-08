@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice & PO Matcher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 12px; }
+        .summary-list { list-style: none; padding-left: 0; font-size: 1.1rem; }
+        .summary-list li { margin-bottom: 0.5rem; }
+        .icon-tick { color: green; font-weight: bold; }
+        .icon-cross { color: red; font-weight: bold; }
+        .comparison-values { font-size: 0.9rem; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="card p-4">
+            <h1 class="text-center mb-4">Invoice & Purchase Order Matcher</h1>
+            <form method="POST" class="mt-4" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="invoice_file" class="form-label">Upload Invoice (PDF or Image)</label>
+                        <input class="form-control" type="file" id="invoice_file" name="invoice_file" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="po_file" class="form-label">Upload Purchase Order (PDF or Image)</label>
+                        <input class="form-control" type="file" id="po_file" name="po_file" required>
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Compare & Match</button>
+                </div>
+            </form>
+        </div>
+
+        {% if results %}
+        <div class="mt-5">
+            <h2 class="text-center mb-4">Comparison Result</h2>
+            
+            {% if results.is_perfect_match %}
+            <div class="alert alert-success p-4">
+                <h4 class="alert-heading d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+                    Perfect Match!
+                </h4>
+                <hr>
+                <ul class="summary-list mt-3">
+                    <li>Invoice <strong>#{{ results.invoice_data.invoice_id }}</strong> matches PO/PR <strong>#{{ results.po_data.pr_id|default:results.po_data.po_id }}</strong></li>
+                    <li>Vendor matches: <strong>{{ results.invoice_data.issuer }}</strong> <span class="icon-tick">✓</span></li>
+                    <li>Line items & quantities match <span class="icon-tick">✓</span></li>
+                    <li>Total amount matches: <strong>${{ results.invoice_data.total_amount|floatformat:2 }}</strong> <span class="icon-tick">✓</span></li>
+                </ul>
+                <hr>
+                <p class="mb-0 fs-5"><strong>→ Status: APPROVED - No issues found!</strong></p>
+            </div>
+            {% else %}
+            <div class="alert alert-danger p-4">
+                 <h4 class="alert-heading d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-circle-fill me-2" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>
+                    Mismatch Found - Needs Review
+                </h4>
+                <hr>
+                <ul class="summary-list mt-3">
+                    <li>
+                        PO/PR & Invoice Numbers: 
+                        {% if results.matches.id %}<span class="icon-tick">✓</span>
+                        {% else %}<span class="icon-cross">✗</span>
+                        {% endif %}
+                        <div class="comparison-values">
+                            Invoice: {{ results.invoice_data.invoice_id|default:"[Not Found]" }} | PO/PR: {{ results.po_data.pr_id|default:results.po_data.po_id|default:"[Not Found]" }}
+                        </div>
+                    </li>
+                    <li>
+                        Vendor Name:
+                        {% if results.matches.vendor %}
+                            <strong>{{ results.invoice_data.issuer|default:results.po_data.vendor }}</strong> <span class="icon-tick">✓</span>
+                        {% else %}
+                            <span class="icon-cross">✗</span>
+                            <div class="comparison-values">
+                                Invoice Issuer: {{ results.invoice_data.issuer|default:"[Not Found]" }} | PO Vendor: {{ results.po_data.vendor|default:"[Not Found]" }}
+                            </div>
+                        {% endif %}
+                    </li>
+                    <li>
+                        Line Items & Quantities:
+                        {% if results.matches.items %}<span class="icon-tick">✓</span>
+                        {% else %}<span class="icon-cross">✗</span>
+                        {% endif %}
+                    </li>
+                     <li>
+                        Total Amount:
+                        {% if results.matches.total %}
+                            <strong>${{ results.invoice_data.total_amount|floatformat:2 }}</strong> <span class="icon-tick">✓</span>
+                        {% else %}
+                            <span class="icon-cross">✗</span>
+                            <div class="comparison-values">
+                                Invoice: ${{ results.invoice_data.total_amount|floatformat:2|default:"[N/A]" }} | PO: ${{ results.po_data.total_amount|floatformat:2|default:"[N/A]" }}
+                            </div>
+                        {% endif %}
+                    </li>
+                </ul>
+                 <hr>
+                 <p class="mb-1"><strong>Discrepancies Noted:</strong></p>
+                <ul>
+                    {% for detail in results.mismatch_details %}
+                    <li>{{ detail }}</li>
+                    {% endfor %}
+                    {% if results.ai_error %}
+                    <li><strong>AI Processing Error:</strong> {{ results.ai_error }}</li>
+                    {% endif %}
+                </ul>
+                <p class="mb-0 fs-5 mt-3"><strong>→ Status: NEEDS REVIEW</strong></p>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+

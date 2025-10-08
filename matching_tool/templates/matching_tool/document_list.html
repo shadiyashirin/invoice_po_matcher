@@ -1,0 +1,95 @@
+{% extends 'matching_tool/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Document History</h2>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Recent Matches</h4>
+            </div>
+            <div class="card-body">
+                {% if matches %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Purchase Order</th>
+                                <th>Match Score</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in matches %}
+                            <tr>
+                                <td>{{ match.invoice.document_number }}</td>
+                                <td>{{ match.purchase_order.document_number }}</td>
+                                <td>
+                                    <span class="badge bg-{% if match.is_perfect_match %}success{% else %}warning{% endif %}">
+                                        {{ match.match_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if match.is_perfect_match %}
+                                        <span class="badge bg-success">Perfect Match</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ match.discrepancies|length }} issues</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ match.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No matches found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>All Documents</h4>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Document #</th>
+                                <th>Vendor</th>
+                                <th>Total</th>
+                                <th>Uploaded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>{{ doc.get_document_type_display }}</td>
+                                <td>{{ doc.document_number }}</td>
+                                <td>{{ doc.vendor_name }}</td>
+                                <td>${{ doc.total_amount }}</td>
+                                <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No documents found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="/" class="btn btn-primary">Upload New Documents</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

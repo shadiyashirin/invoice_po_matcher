@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
-    startCommand: "gunicorn invoice_po_matcher.wsgi.application" # The command to run your live server
+    startCommand: "gunicorn invoice_po_matcher.wsgi:application" # The command to run your live server
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4

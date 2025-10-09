@@ -1,5 +1,3 @@
-
-
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -12,14 +10,17 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fallback-key-for-dev-only')
 
-SECRET_KEY = 'django-insecure-=jfrj^3-)g7wsdn*fm_5jo7f5t*i#b(q&@bo7-h&$k3_h1h2y@'
 
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') + [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',  # Add this for Render
+]
 
 # Application definition
 
@@ -48,7 +49,7 @@ ROOT_URLCONF = 'invoice_po_matcher.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/ 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

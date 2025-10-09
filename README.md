@@ -14,6 +14,7 @@ The tool intelligently extracts key information such as invoice/PO numbers, vend
   - Compares partial IDs, ignoring company-specific prefixes.
   - Cross-references vendor and issuer names for a more robust match.
   - Compares line items based on normalized descriptions and quantities.
+- **Secure API Key Handling:** Uses a .env file to keep the Google AI API key secure and out of the codebase.
 
 ## Technology Stack
 
@@ -21,6 +22,7 @@ The tool intelligently extracts key information such as invoice/PO numbers, vend
 - **AI:** Google Generative AI (Gemini) via google-generativeai SDK
 - **Text Extraction:** PyMuPDF (for PDFs), Pytesseract (for OCR on images)
 - **Frontend:** HTML, Bootstrap 5
+- - **Security:** python-dotenv for environment variable management
 
 ## Prerequisites
 

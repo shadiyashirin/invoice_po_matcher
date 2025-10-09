@@ -1,22 +1,13 @@
 services:
-  - type: web          # Specifies a Web Service that can receive HTTP requests
+  - type: web
     name: invoice-matcher-app
-    runtime: python    # The programming language of the application
-    plan: free         # Use Render's free tier for the web service
-    buildPacks:        # CRITICAL: Installs system-level dependencies before Python
-      - url: https://github.com/heroku/heroku-buildpack-python
-      - url: https://github.com/pathwaysmedical/heroku-buildpack-tesseract
-    buildCommand: "bash ./build.sh" # The command Render runs to build your project
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
     startCommand: "gunicorn matcherproject.wsgi:application" # The command to run your live server
     envVars:
-      # --- Basic Configuration ---
       - key: PYTHON_VERSION
         value: 3.11.4
-      # --- Database Connection ---
-      - key: DATABASE_URL
-        fromDatabase:
-          name: invoice-matcher-db   # Securely connects to the database service defined above
-          property: internalUrl
       # --- Secret Management ---
       - key: SECRET_KEY
         generateValue: true          # Tells Render to auto-generate a strong, random secret key

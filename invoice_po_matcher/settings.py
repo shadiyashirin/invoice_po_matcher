@@ -2,11 +2,14 @@
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Google Generative AI API Key
-GOOGLE_API_KEY = "AIzaSyB8fxW1CxMa4z2AwR0KwqHvnttvt4t-yAU"
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 
 
